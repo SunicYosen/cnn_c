@@ -22,4 +22,5 @@ Ref: [CSDN](http://blog.csdn.net/tostq/article/category/6290467) \
 Source: [Github](https://github.com/tostq/DeepLearningC/tree/master/CNN)
 
 ## Thanks
+
 Thanks to @tostq.
