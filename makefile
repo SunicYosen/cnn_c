@@ -31,7 +31,7 @@ SAVETRANDATA ?= 0 # 0-Not save & 1-save
 
 PREDEFINE += SAVETRANDATA=$(SAVETRANDATA) \
              TEST=$(TEST) \
-			 TRAIN=$(TRAIN) \
+			       TRAIN=$(TRAIN) \
 
 PREDEF := $(addprefix -D$(SPACE),$(PREDEFINE))
 CFLAGS += $(PREDEF)
