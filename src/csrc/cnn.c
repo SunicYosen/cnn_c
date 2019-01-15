@@ -233,7 +233,7 @@ void SaveCnn(Cnn* cnn, const char* filename)
 	FILE  *file_point=NULL;
 	file_point=fopen(filename,"wb");
 	if(file_point==NULL)
-		printf("write file failed\n");
+		printf("[-] <SaveCnn> Open write file failed <%s>\n",filename);
 
 	for(int i=0; i<cnn->C1->input_channels; i++)
 		for(int j=0; j<cnn->C1->output_channels; j++)
