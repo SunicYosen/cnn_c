@@ -11,8 +11,14 @@ BUILDDIR := $(BASEDIR)/build
 OUTPUTDIR := $(BASEDIR)/output
 
 CC := riscv64-unknown-elf-gcc
-CXX := riscv64-unknown-elf-g++ 
+CXX := riscv64-unknown-elf-g++
+
+# CFLAGS
+CFLAGS += -Wall -static -fPIC -O0
+
+# <math.h>
 CFLAGS += -lm
+
 default: all
 
 # Make Flags
