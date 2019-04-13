@@ -10,8 +10,10 @@ CSRCDIR := $(SRCDIR)/csrc
 BUILDDIR := $(BASEDIR)/build
 OUTPUTDIR := $(BASEDIR)/output
 
-CC := riscv64-unknown-elf-gcc
-CXX := riscv64-unknown-elf-g++
+#CC := riscv64-unknown-elf-gcc
+#CXX := riscv64-unknown-elf-g++
+CC := gcc
+CXX := g++
 
 # CFLAGS
 CFLAGS += -Wall -static -fPIC -O0

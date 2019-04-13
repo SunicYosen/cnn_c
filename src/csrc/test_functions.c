@@ -47,11 +47,11 @@ void TestMat()
 	}
 
 	MatSize cov1size={srcSize.columns+map_size.columns-1,srcSize.rows+map_size.rows-1};
-	float** cov1=MatCov(map,map_size,src,srcSize,FULL);
+	float** cov1=MatConvolution(map,map_size,src,srcSize,FULL);
 	//MatSize cov2size={srcSize.columns,srcSize.rows};
-	//float** cov2=MatCov(map,map_size,src,srcSize,SAME);
+	//float** cov2=MatConvolution(map,map_size,src,srcSize,SAME);
 	MatSize cov3size={srcSize.columns-(map_size.columns-1),srcSize.rows-(map_size.rows-1)};
-	float** cov3=MatCov(map,map_size,src,srcSize,VALID);
+	float** cov3=MatConvolution(map,map_size,src,srcSize,VALID);
 
 	MatSaving(src,srcSize,"output/src.ma");
 	MatSaving(map,map_size,"output/map.ma");
@@ -98,10 +98,10 @@ void TestMat1()
 		}
 	}
 
-	float** cov1=MatCov(map1,map_size,src,srcSize,VALID);
-	float** cov2=MatCov(map2,map_size,src,srcSize,VALID);
+	float** cov1=MatConvolution(map1,map_size,src,srcSize,VALID);
+	float** cov2=MatConvolution(map2,map_size,src,srcSize,VALID);
 	MatSize covsize={srcSize.columns-(map_size.columns-1),srcSize.rows-(map_size.rows-1)};
-	float** cov3=MatCov(map3,map_size,src,srcSize,VALID);
+	float** cov3=MatConvolution(map3,map_size,src,srcSize,VALID);
 	MatAdd(cov1,cov1,covsize,cov2,covsize);
 	MatAdd(cov1,cov1,covsize,cov3,covsize);
 

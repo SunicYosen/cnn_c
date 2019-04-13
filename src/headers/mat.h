@@ -7,8 +7,8 @@
 #define VALID 2
 
 typedef struct Mat2DSize{
-	int columns;
-	int rows;
+	int8_t columns;
+	int8_t rows;
 }MatSize;
 
 float** MatRotate180(float** mat, MatSize mat_size);
@@ -16,7 +16,7 @@ void MatAdd(float** res, float** mat1, MatSize mat_size1, float** mat2, MatSize 
 
 float** MatCorrelation(float** map, MatSize map_size, float** inputData, MatSize inSize, int type);
 
-float** MatCov(float** map,MatSize map_size,float** inputData,MatSize inSize,int type);
+float** MatConvolution(float** map,MatSize map_size,float** inputData,MatSize inSize,int type);
 
 float** MatUpSample(float** mat,MatSize mat_size,int upc,int upr);
 
@@ -26,7 +26,7 @@ float** MatEdgeShrink(float** mat,MatSize mat_size,int shrinkc,int shrinkr);
 
 void MatSaving(float** mat,MatSize mat_size,const char* filename);
 
-void MatMultifactor(float** res, float** mat, MatSize mat_size, float factor);
+void MatMultiplyImmediate(float** res, float** mat, MatSize mat_size, float factor);
 
 float MatSum(float** mat,MatSize mat_size);
 

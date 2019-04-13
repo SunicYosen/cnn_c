@@ -11,14 +11,15 @@
 
 //Define Structure of Convolutional Layer
 typedef struct ConvolutionalLayer{
-	int input_width; 
-	int input_height;
-	int map_size;
+	int8_t input_width;  //
+	int8_t input_height; //
+	int8_t map_size;     //kernel feature map size {map_size}
 
-	int input_channels;
-	int output_channels;
-	float**** map_data;
-	float**** dmap_data;
+	int8_t input_channels;  //
+	int8_t output_channels; //
+
+	float**** map_data;     //Kernel Data
+	float**** dmap_data;    //
 
 	float* basic_data;
 	bool is_full_connect;
@@ -28,7 +29,7 @@ typedef struct ConvolutionalLayer{
 	float*** y;
 
 	float*** d;
-}CovLayer;
+}ConvolutionLayer;
 
 //Define pooling layer
 typedef struct PoolingLayer{
@@ -48,10 +49,10 @@ typedef struct PoolingLayer{
 
 //Define Output layer
 typedef struct OutputLayer{
-	int input_num;
-	int output_num;
+	int8_t input_num;
+	int8_t output_num;
 
-	float** wData;
+	float** weight_data;
 	float* basic_data;  
 
 	float* v;
@@ -63,27 +64,27 @@ typedef struct OutputLayer{
 
 //Define CNN Architectrue
 typedef struct ConvolutionalNeuralNetwork{
-	int layer_num;       //layer_num
-	CovLayer* C1;        //Cov Layer1
+	int8_t layer_num;    //Layer num
+	ConvolutionLayer* C1;        //Convolution Layer1
 	PoolingLayer* S2;    //Pooling Layer2
-	CovLayer* C3;        //Cov Layer3
+	ConvolutionLayer* C3;        //Convolution Layer3
 	PoolingLayer* S4;    //Pooling Layer4
 	OutputLayer* O5;     //Output Layer5
 
-	float* e;
-	float* L; 
+	float* e;            //
+	float* L;            //
 }Cnn;
 
 //Train Options
 typedef struct TrainOptions{
-	int numepochs; 
+	int8_t numepochs; 
 	float alpha; 
 }TrainOptions;
 
-void CnnSetup(Cnn* cnn,MatSize inputSize,int outputSize);
+void CnnSetup(Cnn* cnn, MatSize inputSize, int8_t outputSize);
 
 void CnnTrain(Cnn* cnn,	ImageArray inputData,LabelArray outputData, \
-              TrainOptions opts, int trainNum);
+              TrainOptions opts, int32_t num_trains);
 
 float CnnTest(Cnn* cnn, ImageArray inputData,LabelArray outputData,int testNum);
 
@@ -91,15 +92,18 @@ void SaveCnn(Cnn* cnn, const char* filename);
 
 void ImportCnn(Cnn* cnn, const char* filename);
 
-CovLayer* InitialCovLayer(int input_width,int input_height,int map_size,  \
-                          int input_channels,int output_channels);
-void CovLayerConnect(CovLayer* covL,bool* connect_model);
+ConvolutionLayer* InitialConvolutionLayer(int8_t input_width, int8_t input_height, \
+          int8_t map_size, int8_t input_channels, int8_t output_channels);
 
-PoolingLayer* InitialPoolingLayer(int input_width,int inputHeigh,int map_size, \
-                       int input_channels,int output_channels,int pooling_type);
-void PoolingLayerConnect(PoolingLayer* poolL,bool* connect_model);
+void ConvolutionLayerConnect(ConvolutionLayer* cov_layer,bool* connect_model);
 
-OutputLayer* InitOutputLayer(int input_num,int output_num);
+PoolingLayer* InitialPoolingLayer(int8_t input_width, int8_t input_height, \
+                                  int8_t map_size, int8_t input_channels, \
+																	int8_t output_channels, int8_t pooling_type);
+
+void PoolingLayerConnect(PoolingLayer* poolL, bool* connect_model);
+
+OutputLayer* InitOutputLayer(int8_t input_num, int8_t output_num);
 
 float ActivationSigma(float input,float bas); 
 

@@ -4,6 +4,7 @@
 #include <stdlib.h>  //random
 #include <stdio.h>
 #include <time.h>    //random seed
+#include <stdint.h>
 #include "cnn.h" 
 
 int main()
@@ -23,22 +24,24 @@ int main()
 	MatSize input_size;
 	input_size.columns = test_images->image_point[0].number_of_columns;
 	input_size.rows = test_images->image_point[0].number_of_rows;
+
   printf("[+] Input size: {%d,%d}\n",input_size.columns,input_size.rows);
 
   //Output Label array size {label_length} {10}
-	int output_size = test_labels->label_point[0].label_length;
+	int8_t output_size = test_labels->label_point[0].label_length;
 	printf("[+] Output size: %d\n",output_size);
   
 	//Setup CNN
 	Cnn* cnn=(Cnn*)malloc(sizeof(Cnn));
-	CnnSetup(cnn,input_size,output_size);
+
+	CnnSetup(cnn, input_size, output_size);
 	printf("[+] CNN setup finished!\n");
     
   #if TRAIN
 		TrainOptions opts;
 		opts.numepochs=1;
 		opts.alpha=1.0;
-		int train_images_num = 55000;
+		int32_t train_images_num = 55000;
 		// Train 
 		CnnTrain(cnn, train_images, train_labels, opts, train_images_num);
 		printf("[+] Train finished!\n");
