@@ -10,7 +10,7 @@
 typedef struct MnistImage{  //Structrue for Mnist Image.
 	int16_t number_of_columns;             //Define the width of image. --- columns
 	int16_t number_of_rows;                //Define the highth ot image. --- rows
-	uint8_t** image_data;      //Dynamic Define 2D Image Data Arrary. 
+	int16_t** image_data;      //Dynamic Define 2D Image Data Arrary. 
 }MnistImage;
 
 typedef struct MnistImageArray{ //Structrue for Mnist Images Array
@@ -20,7 +20,7 @@ typedef struct MnistImageArray{ //Structrue for Mnist Images Array
 
 typedef struct MnistLabel{  //Strutrue for Mnist Label
 	int16_t label_length;        //The length of Label 
-	int8_t* label_data;         //The data of label
+	int16_t* label_data;         //The data of label
 }MnistLabel;
 
 typedef struct MnistLabelArray{ //Structrue for Mnist Label Arrary

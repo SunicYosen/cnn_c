@@ -75,11 +75,11 @@ ImageArray ReadImages(const char* filename)
 	{  
 		image_array->image_point[i].number_of_rows = n_rows;     //
 		image_array->image_point[i].number_of_columns = n_columns;  //set 
-		image_array->image_point[i].image_data = (uint8_t** ) malloc(n_rows * sizeof(uint8_t *));
+		image_array->image_point[i].image_data = (int16_t** ) malloc(n_rows * sizeof(int16_t *));
 
 		for(uint32_t row = 0; row < n_rows; ++row) //from 0 -> n_rows-1
 		{
-			image_array->image_point[i].image_data[row] = (uint8_t* )malloc(n_columns * sizeof(uint8_t));
+			image_array->image_point[i].image_data[row] = (int16_t* )malloc(n_columns * sizeof(int16_t));
 
 			for(uint32_t column = 0; column < n_columns; ++column)  //from 0 -> n_columns-1
 			{ 
@@ -89,7 +89,7 @@ ImageArray ReadImages(const char* filename)
 				
 				//Change color to 1/0 by color Threshold.
 				image_array->image_point[i].image_data[row][column] = \
-						(uint8_t)((temp_pixel>(uint8_t)COLORTH) ? (uint8_t)1 : (uint8_t)0);
+						(int16_t)((temp_pixel>(int16_t)COLORTH) ? (int16_t)1 : (int16_t)0);
 				
 				/*
 					//Change 8-bit pixel to float. 
@@ -115,7 +115,7 @@ LabelArray ReadLabels(const char* filename)
 	}
 
 	int32_t magic_number = 0;      //A 32-bit interger
-	int32_t number_of_labels = 0;  //60000 for training. 5000 for testing
+	int32_t number_of_labels = 0;  //60000 for training. 10000 for testing
 	int16_t label_long = 10;
 
 	fread((char*)&magic_number, sizeof(magic_number), 1, file_point); 
@@ -132,13 +132,13 @@ LabelArray ReadLabels(const char* filename)
 	for(int32_t i = 0; i < number_of_labels; ++i)  
 	{  
 		labels_array->label_point[i].label_length = 10;
-		labels_array->label_point[i].label_data = (int8_t *)calloc(label_long, sizeof(int8_t));
+		labels_array->label_point[i].label_data = (int16_t *)calloc(label_long, sizeof(int16_t));
 		
 		unsigned char temp = 0;  
 		fread((char*) &temp, sizeof(temp), 1, file_point); 
 		
-		//printf("%d\n",labels_array->label_point[i].label_data[(uint8_t)temp]);
-		labels_array->label_point[i].label_data[(uint8_t)temp] = 1;
+		//printf("%d\n",labels_array->label_point[i].label_data[(int16_t)temp]);
+		labels_array->label_point[i].label_data[(int16_t)temp] = 1;
 	
 	}
 
@@ -216,14 +216,14 @@ void SaveImage(ImageArray image_array, char* filedir)
 			
 			for(int32_t m=0; m<image_array->image_point[i].number_of_columns; m++)
 			{
-				uint8_t * temp;
+				int16_t * temp;
 				* temp = image_array->image_point[i].image_data[r][m];
-				fwrite(&temp, sizeof(uint8_t), 1, file_point);
+				fwrite(&temp, sizeof(int16_t), 1, file_point);
 
-				//printf("%0x",*temp);
+				printf("%0x",*temp);
 			}			
-			//printf("\n");
-			//fwrite((uint8_t)'\n',sizeof(uint8_t),1,file_point);
+			printf("\n");
+			//fwrite((int16_t)'\n',sizeof(int16_t),1,file_point);
 		}
 		
 		fclose(file_point);

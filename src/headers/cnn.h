@@ -118,15 +118,18 @@ int16_t ActivationSigma(int16_t input, int16_t bias);
 
 int16_t ActivationReLU(int16_t input, int16_t bias);
 
-void CnnFF(Cnn* cnn, uint8_t** inputData); 
+void CnnFF(Cnn* cnn, int16_t** inputData); 
 
-void CnnBP(Cnn* cnn, int8_t* outputData);
+void CnnBP(Cnn* cnn, int16_t* outputData);
 
-void CnnApplyGradients(Cnn* cnn, TrainOptions opts,int16_t** inputData);
+void CnnApplyGradients(Cnn* cnn, TrainOptions opts, int16_t** inputData);
 
 void CnnClear(Cnn* cnn); 
 
 void AvgPooling(int16_t** output,MatSize outputSize, int16_t** input,
+                MatSize inputSize, int16_t map_size);
+
+void MaxPooling(int16_t** output,MatSize outputSize, int16_t** input,
                 MatSize inputSize, int16_t map_size);
 
 void nnff(int16_t* output, int16_t* input, int16_t** wdata, \

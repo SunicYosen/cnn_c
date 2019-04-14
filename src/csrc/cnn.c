@@ -28,7 +28,7 @@ void CnnSetup(Cnn* cnn, MatSize input_size, int16_t output_size)
 	temp_input_size.columns = temp_input_size.columns - map_size + 1;
 	temp_input_size.rows = temp_input_size.rows - map_size + 1;
 	cnn->S2 = InitialPoolingLayer(temp_input_size.columns, \
-	                              temp_input_size.rows, 2, 6, 6, AVG_POOLING);
+	                              temp_input_size.rows, 2, 6, 6, MAX_POOLING);
 
 	//Layer3 Convolution input size: {12,12}
 	temp_input_size.columns = temp_input_size.columns / 2;
@@ -40,7 +40,7 @@ void CnnSetup(Cnn* cnn, MatSize input_size, int16_t output_size)
 	temp_input_size.columns = temp_input_size.columns - map_size + 1;
 	temp_input_size.rows = temp_input_size.rows - map_size + 1;
 	cnn->S4 = InitialPoolingLayer(temp_input_size.columns, 
-	                              temp_input_size.rows, 2, 12, 12, AVG_POOLING);
+	                              temp_input_size.rows, 2, 12, 12, MAX_POOLING);
 	
 	//Layer5 Output layer. Input size: {4,4}
 	temp_input_size.columns = temp_input_size.columns / 2;
@@ -83,10 +83,9 @@ ConvolutionLayer* InitialConvolutionLayer(int16_t input_width, int16_t input_hei
 				{
 					//[-1,1] -> [-128,127]
 					//float randnum = (((float)rand()/(float)RAND_MAX)-0.5)*2;
-					int16_t randnum = rand()%(uint16_t)256 - 128;
+					int16_t randnum = rand()%256 - 128;
 
-					cov_layer->map_data[i][j][r][c] = randnum * 3 / \
-					      (map_size * map_size * (input_channels + output_channels));
+					cov_layer->map_data[i][j][r][c] = randnum;
 				}
 			}
 		}
@@ -116,9 +115,9 @@ ConvolutionLayer* InitialConvolutionLayer(int16_t input_width, int16_t input_hei
 	int16_t output_width = input_width   - map_size + 1;
 	int16_t output_height = input_height - map_size + 1;
 
-	cov_layer->d = (int16_t***)malloc(output_channels*sizeof(int16_t**));
-	cov_layer->v = (int16_t***)malloc(output_channels*sizeof(int16_t**));
-	cov_layer->y = (int16_t***)malloc(output_channels*sizeof(int16_t**));
+	cov_layer->d = (int16_t***)malloc(output_channels * sizeof(int16_t**));
+	cov_layer->v = (int16_t***)malloc(output_channels * sizeof(int16_t**));
+	cov_layer->y = (int16_t***)malloc(output_channels * sizeof(int16_t**));
 
 	for(int j=0; j<output_channels; j++)
 	{
@@ -198,8 +197,8 @@ OutputLayer* InitOutputLayer(int16_t input_num,int16_t output_num)
 		{
 			//[-1,1] -> [-128,127]
 			//float randnum = (((float)rand()/(float)RAND_MAX)-0.5)*2;
-			int16_t randnum = rand()%(uint16_t)256 - 128;
-			outLayer->weight_data[i][j] = randnum * 2 / (input_num + output_num);
+			int16_t randnum = rand()%256 - 128;
+			outLayer->weight_data[i][j] = randnum;
 		}
 	}
 
@@ -210,9 +209,9 @@ OutputLayer* InitOutputLayer(int16_t input_num,int16_t output_num)
 
 
 //Vector Max
-int32_t VectorMaxIndex(int8_t* vector, int32_t vector_length)
+int32_t VectorMaxIndex(int16_t* vector, int16_t vector_length)
 {
-	int8_t max_num   = 0;
+	int16_t max_num   = 0;
 	int32_t max_index = 0;
 
 	for(int32_t i=0; i<vector_length; i++)
@@ -351,7 +350,7 @@ void CnnTrain(Cnn* cnn,	ImageArray input_data, LabelArray output_data, \
 				SaveCnnData(cnn,filename,input_data->image_point[n].ImgData);
 			#endif
 
-			CnnApplyGradients(cnn,opts,input_data->image_point[train].image_data);
+			CnnApplyGradients(cnn, opts, input_data->image_point[train].image_data);
 
 			CnnClear(cnn);
 
@@ -368,21 +367,33 @@ void CnnTrain(Cnn* cnn,	ImageArray input_data, LabelArray output_data, \
 	}
 }
 
-void CnnFF(Cnn* cnn, uint8_t** input_data)
+void CnnFF(Cnn* cnn, int16_t** input_data)
 {
 	//First C1 Convolution
 	MatSize map_size    = {cnn->C1->map_size,    cnn->C1->map_size};
 	MatSize input_size  = {cnn->C1->input_width, cnn->C1->input_height};
 	MatSize output_size = {cnn->S2->input_width, cnn->S2->input_height};
 
+  int16_t ** input_data_int16 = (int16_t**)malloc(input_size.rows * \
+	                                                sizeof(int16_t*));
+	
+	for(int32_t i=0; i<input_size.rows; i++)
+	{
+		input_data_int16[i] = (int16_t*)malloc(input_size.columns * sizeof(int16_t));
+		for(int32_t j=0; j<input_size.columns; j++)
+		{
+			input_data_int16[i][j] = input_data[i][j];
+		}
+	}	
+
 	for(int32_t i=0; i<(cnn->C1->output_channels); i++)
 	{
 		for(int32_t j=0; j<(cnn->C1->input_channels); j++)
 		{
 			int16_t** mapout = MatConvolution(cnn->C1->map_data[j][i], map_size, \
-			                      input_data, input_size, VALID);
+			                      input_data_int16, input_size, VALID);
 
-			MatAdd(cnn->C1->v[i], cnn->C1->v[i], output_size,mapout, output_size);
+			MatAdd(cnn->C1->v[i], cnn->C1->v[i], output_size, mapout, output_size);
 			
 			for(int32_t row=0; row<output_size.rows; row++)
 				free(mapout[row]);
@@ -390,11 +401,15 @@ void CnnFF(Cnn* cnn, uint8_t** input_data)
 			free(mapout);
 		}
 
-		for(int row=0; row<output_size.rows; row++)
-			for(int col=0; col<output_size.columns; col++)
-				cnn->C1->y[i][row][col] = ActivationSigma(cnn->C1->v[i][row][col], \
+		for(int32_t row=0; row<output_size.rows; row++)
+			for(int32_t col=0; col<output_size.columns; col++)
+				cnn->C1->y[i][row][col] = ActivationReLU(cnn->C1->v[i][row][col], \
 				                                      cnn->C1->bias_data[i]);
 	}
+
+	for(int32_t i=0; i<input_size.rows; i++)
+	  free(input_data_int16[i]);
+	free(input_data_int16);
 
 
 	//S2 Pooling 
@@ -404,13 +419,18 @@ void CnnFF(Cnn* cnn, uint8_t** input_data)
 	input_size.columns = cnn->S2->input_width;
 	input_size.rows = cnn->S2->input_height;
 
-	for(int i=0; i<(cnn->S2->output_channels); i++)
+	for(int32_t i=0; i<(cnn->S2->output_channels); i++)
 	{
 		if(cnn->S2->pooling_type == AVG_POOLING)
-			AvgPooling(cnn->S2->y[i],output_size,cnn->C1->y[i],
-			                         input_size,cnn->S2->map_size);
-	}
+			AvgPooling(cnn->S2->y[i], output_size, cnn->C1->y[i], \
+			                          input_size,  cnn->S2->map_size);
 
+	  else if(cnn->S2->pooling_type == MAX_POOLING)
+			MaxPooling(cnn->S2->y[i], output_size, cnn->C1->y[i], \
+			                          input_size,  cnn->S2->map_size);
+	}
+  
+	//C3
 	output_size.columns = cnn->S4->input_width;
 	output_size.rows = cnn->S4->input_height;
 	input_size.columns = cnn->C3->input_width;
@@ -424,6 +444,7 @@ void CnnFF(Cnn* cnn, uint8_t** input_data)
 		{
 			int16_t** mapout = MatConvolution(cnn->C3->map_data[j][i], map_size, 
 			                        cnn->S2->y[j], input_size, VALID);
+
 			MatAdd(cnn->C3->v[i], cnn->C3->v[i], output_size, mapout, output_size);
 			
 			for(int r=0; r<output_size.rows; r++)
@@ -433,7 +454,7 @@ void CnnFF(Cnn* cnn, uint8_t** input_data)
 		}
 		for(int r=0; r<output_size.rows; r++)
 			for(int c=0; c<output_size.columns; c++)
-				cnn->C3->y[i][r][c] = ActivationSigma(cnn->C3->v[i][r][c], \
+				cnn->C3->y[i][r][c] = ActivationReLU(cnn->C3->v[i][r][c], \
 				                                    cnn->C3->bias_data[i]);
 	}
 
@@ -445,6 +466,10 @@ void CnnFF(Cnn* cnn, uint8_t** input_data)
 	{
 		if(cnn->S4->pooling_type == AVG_POOLING)
 			AvgPooling(cnn->S4->y[i], output_size, cnn->C3->y[i], \
+			                          input_size, cnn->S4->map_size);
+
+		else if(cnn->S4->pooling_type == MAX_POOLING)
+			MaxPooling(cnn->S4->y[i], output_size, cnn->C3->y[i], \
 			                          input_size, cnn->S4->map_size);
 	}
 
@@ -501,13 +526,36 @@ void AvgPooling(int16_t** output, MatSize output_size, int16_t** input, \
 		}
 }
 
+void MaxPooling(int16_t** output, MatSize output_size, int16_t** input, \
+                               MatSize input_size, int16_t map_size)
+{
+	int output_width  = input_size.columns / map_size;
+	int output_height = input_size.rows / map_size;
+
+	if(output_size.columns != output_width || output_size.rows != output_height)
+	  printf("[-] ERROR: Output size is wrong! <AvgPooling> \n");
+
+	for(int32_t i=0; i<output_height; i++)
+		for(int32_t j=0; j<output_width; j++)
+		{
+			int16_t max_value = input[i*map_size][j*map_size];
+			for(int32_t m=i*map_size; m<i*map_size+map_size; m++)
+				for(int32_t n=j*map_size; n<j*map_size+map_size; n++)
+				{
+					if(input[m][n] > max_value)
+						max_value = input[m][n];
+				}
+			output[i][j] = max_value;
+		}
+}
+
 // 
 int16_t VectorMultiply(int16_t* vector1, int16_t* vector2, int32_t vector_length)//
 {
 	int16_t result=0;
 
 	for(int32_t i=0; i<vector_length; i++)
-		result = result + vector1[i]*vector2[i];
+		result = result + vector1[i] * vector2[i];
 
 	return result;
 }
@@ -515,26 +563,37 @@ int16_t VectorMultiply(int16_t* vector1, int16_t* vector2, int32_t vector_length
 //Vector * Mat + bias
 void nnff(int16_t* output, int16_t* input, int16_t** wdata, int16_t* bias, MatSize nnSize)
 {
-	int width  = nnSize.columns;
-	int height = nnSize.rows;
+	int32_t width  = nnSize.columns;
+	int32_t height = nnSize.rows;
 
 	for(int32_t i=0; i<height; i++)
 		output[i] = VectorMultiply(input, wdata[i], width) + bias[i];
 }
 
-float sigma_derivation(float y)
+int16_t sigma_derivation(int16_t y)
 { //
-	return y*(1-y); 
+	if(y>=0)
+		return (int16_t)1;
+	else 
+		return (int16_t)0; 
+}
+
+int16_t relu_derivation(int16_t y)
+{
+	if(y>=0)
+		return 1;
+	else 
+		return 0;
 }
 
 //
-void CnnBP(Cnn* cnn, int8_t* output_data)
+void CnnBP(Cnn* cnn, int16_t* output_data)
 {
 	for(int32_t i=0; i<cnn->O5->output_num; i++)
 		cnn->e[i] = cnn->O5->y[i] - output_data[i];
 
 	for(int32_t i=0; i<cnn->O5->output_num; i++)
-		cnn->O5->d[i] = cnn->e[i] * sigma_derivation(cnn->O5->y[i]);
+		cnn->O5->d[i] = cnn->e[i] * relu_derivation(cnn->O5->y[i]);
 
 	MatSize output_size = {cnn->S4->input_width / cnn->S4->map_size, \
 	                       cnn->S4->input_height / cnn->S4->map_size};
@@ -565,7 +624,7 @@ void CnnBP(Cnn* cnn, int8_t* output_data)
 			for(int col=0; col<cnn->S4->input_width; col++)
 			{
 				cnn->C3->d[i][row][col] = C3e[row][col] * \
-				  sigma_derivation(cnn->C3->y[i][row][col])/ \
+				  relu_derivation(cnn->C3->y[i][row][col])/ \
 					(float)(cnn->S4->map_size * cnn->S4->map_size);
 			}
 
@@ -612,7 +671,7 @@ void CnnBP(Cnn* cnn, int8_t* output_data)
 			for(int col=0; col<cnn->S2->input_width; col++)
 			{
 				cnn->C1->d[i][row][col] = C1e[row][col] * \
-				     sigma_derivation(cnn->C1->y[i][row][col]) / \
+				     relu_derivation(cnn->C1->y[i][row][col]) / \
 						 (float)(cnn->S2->map_size * cnn->S2->map_size);
 			}
 		for(int row=0; row<cnn->S2->input_height; row++)

@@ -139,8 +139,8 @@ int16_t** MatConvolution(int16_t** map, MatSize map_size, \
 //Mat up sample 用于反向传播, pooling的反过程
 int16_t** MatUpSample(int16_t** mat, MatSize mat_size, int16_t up_cols, int16_t up_rows)
 { 
-	uint16_t cols = mat_size.columns;
-	uint16_t rows = mat_size.rows;
+	int16_t cols = mat_size.columns;
+	int16_t rows = mat_size.rows;
 	int16_t** result_mat = (int16_t**)malloc((rows*up_rows) * sizeof(int16_t*));
 
 	for(int row=0; row<(rows*up_rows); row++)

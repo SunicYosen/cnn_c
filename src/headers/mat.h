@@ -6,6 +6,8 @@
 #define SAME 1
 #define VALID 2
 
+#include <stdint.h>
+
 typedef struct Mat2DSize{
 	int16_t columns;
 	int16_t rows;
