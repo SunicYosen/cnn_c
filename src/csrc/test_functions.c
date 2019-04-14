@@ -1,6 +1,7 @@
 #include <stdlib.h>  //random
 #include <stdio.h>
 #include <time.h>    //random seed
+
 #include "cnn.h" 
 
 // Test Mnist data. Save the images to local.

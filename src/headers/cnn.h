@@ -11,112 +11,127 @@
 
 //Define Structure of Convolutional Layer
 typedef struct ConvolutionalLayer{
-	int8_t input_width;  //
-	int8_t input_height; //
-	int8_t map_size;     //kernel feature map size {map_size}
+	int16_t input_width;  //
+	int16_t input_height; //
+	int16_t map_size;     //kernel feature map size {map_size}
 
-	int8_t input_channels;  //
-	int8_t output_channels; //
+	int16_t input_channels;  //
+	int16_t output_channels; //
 
-	float**** map_data;     //Kernel Data
-	float**** dmap_data;    //
+	int16_t**** map_data;     //Kernel Data
+	int16_t**** dmap_data;    //存放特征模块的数据的局部梯度
 
-	float* basic_data;
-	bool is_full_connect;
-	bool* connect_model;
+	int16_t* bias_data;     //偏置
+	bool is_full_connect;   //
+	bool* connect_model;    //
 
-	float*** v;
-	float*** y;
+  // 下面三者的大小同输出的维度相同
+	int16_t*** v;            //进入激活函数的输入值
+	int16_t*** y;            //激活函数后神经元的输出
+	int16_t*** d;            //网络的局部梯度,δ值      // 输出像素的局部梯度
 
-	float*** d;
 }ConvolutionLayer;
 
 //Define pooling layer
 typedef struct PoolingLayer{
-	int input_width;
-	int input_height;
-	int map_size;
+	int16_t input_width;
+	int16_t input_height;
+	int16_t map_size;
 
-	int input_channels;
-	int output_channels;
+	int16_t input_channels;
+	int16_t output_channels;
 
-	int pooling_type;
-	float* basic_data;
+	int16_t pooling_type;
+	int16_t* bias_data;
 
-	float*** y;
-	float*** d; 
+	int16_t*** y;  // 采样函数后神经元的输出,无激活函数
+	int16_t*** d;  // 网络的局部梯度,δ值
 }PoolingLayer;
 
 //Define Output layer
 typedef struct OutputLayer{
-	int8_t input_num;
-	int8_t output_num;
+	int16_t input_num;
+	int16_t output_num;
 
-	float** weight_data;
-	float* basic_data;  
+	int16_t** weight_data;
+	int16_t* bias_data;  
 
-	float* v;
-	float* y; 
-	float* d;
+	int16_t* v;
+	int16_t* y; 
+	int16_t* d;
 
 	bool is_full_connect;
 } OutputLayer;
 
 //Define CNN Architectrue
 typedef struct ConvolutionalNeuralNetwork{
-	int8_t layer_num;    //Layer num
+	int16_t layer_num;    //Layer num
 	ConvolutionLayer* C1;        //Convolution Layer1
 	PoolingLayer* S2;    //Pooling Layer2
 	ConvolutionLayer* C3;        //Convolution Layer3
 	PoolingLayer* S4;    //Pooling Layer4
 	OutputLayer* O5;     //Output Layer5
 
-	float* e;            //
-	float* L;            //
+	int16_t* e;            //// 训练误差
+	int16_t* L;            // // 瞬时误差能量
+
 }Cnn;
 
 //Train Options
 typedef struct TrainOptions{
-	int8_t numepochs; 
-	float alpha; 
+	int16_t numepochs; 
+	int16_t alpha; 
 }TrainOptions;
 
-void CnnSetup(Cnn* cnn, MatSize inputSize, int8_t outputSize);
+void CnnSetup(Cnn* cnn, MatSize inputSize, int16_t outputSize);
 
-void CnnTrain(Cnn* cnn,	ImageArray inputData,LabelArray outputData, \
+void CnnTrain(Cnn* cnn,	ImageArray inputData, LabelArray outputData, \
               TrainOptions opts, int32_t num_trains);
 
-float CnnTest(Cnn* cnn, ImageArray inputData,LabelArray outputData,int testNum);
+int32_t CnnTest(Cnn* cnn, ImageArray inputData, \
+                LabelArray outputData, int32_t testNum);
 
 void SaveCnn(Cnn* cnn, const char* filename);
 
 void ImportCnn(Cnn* cnn, const char* filename);
 
-ConvolutionLayer* InitialConvolutionLayer(int8_t input_width, int8_t input_height, \
-          int8_t map_size, int8_t input_channels, int8_t output_channels);
+ConvolutionLayer* InitialConvolutionLayer(int16_t input_width, \
+                                          int16_t input_height, \
+																					int16_t map_size, \
+																					int16_t input_channels, \
+																					int16_t output_channels);
 
 void ConvolutionLayerConnect(ConvolutionLayer* cov_layer,bool* connect_model);
 
-PoolingLayer* InitialPoolingLayer(int8_t input_width, int8_t input_height, \
-                                  int8_t map_size, int8_t input_channels, \
-																	int8_t output_channels, int8_t pooling_type);
+PoolingLayer* InitialPoolingLayer(int16_t input_width, \
+                                  int16_t input_height, \
+                                  int16_t map_size, \
+																	int16_t input_channels, \
+																	int16_t output_channels, \
+																	int16_t pooling_type);
 
 void PoolingLayerConnect(PoolingLayer* poolL, bool* connect_model);
 
-OutputLayer* InitOutputLayer(int8_t input_num, int8_t output_num);
+OutputLayer* InitOutputLayer(int16_t input_num, int16_t output_num);
 
-float ActivationSigma(float input,float bas); 
+int16_t ActivationSigma(int16_t input, int16_t bias); 
 
-void CnnFF(Cnn* cnn,float** inputData); 
-void CnnBP(Cnn* cnn,float* outputData); 
-void CnnApplyGrads(Cnn* cnn, TrainOptions opts,float** inputData);
+int16_t ActivationReLU(int16_t input, int16_t bias);
+
+void CnnFF(Cnn* cnn, uint8_t** inputData); 
+
+void CnnBP(Cnn* cnn, int8_t* outputData);
+
+void CnnApplyGradients(Cnn* cnn, TrainOptions opts,int16_t** inputData);
+
 void CnnClear(Cnn* cnn); 
 
-void AvgPooling(float** output,MatSize outputSize, float** input, 
-                MatSize inputSize, int map_size);
+void AvgPooling(int16_t** output,MatSize outputSize, int16_t** input,
+                MatSize inputSize, int16_t map_size);
 
-void nnff(float* output, float* input, float** wdata, float* bas, MatSize nnSize);
+void nnff(int16_t* output, int16_t* input, int16_t** wdata, \
+          int16_t* bias, MatSize nnSize);
 
-void SaveCnnData(Cnn* cnn,const char* filename,float** inputdata);
+void SaveCnnData(Cnn* cnn, const char* filename, int16_t** inputdata);
 
 #endif

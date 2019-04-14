@@ -80,6 +80,7 @@ ImageArray ReadImages(const char* filename)
 		for(uint32_t row = 0; row < n_rows; ++row) //from 0 -> n_rows-1
 		{
 			image_array->image_point[i].image_data[row] = (uint8_t* )malloc(n_columns * sizeof(uint8_t));
+
 			for(uint32_t column = 0; column < n_columns; ++column)  //from 0 -> n_columns-1
 			{ 
 				unsigned char temp_pixel = 0;   
@@ -89,6 +90,7 @@ ImageArray ReadImages(const char* filename)
 				//Change color to 1/0 by color Threshold.
 				image_array->image_point[i].image_data[row][column] = \
 						(uint8_t)((temp_pixel>(uint8_t)COLORTH) ? (uint8_t)1 : (uint8_t)0);
+				
 				/*
 					//Change 8-bit pixel to float. 
 					image_array->image_point[i].image_data[row][column]= (float)temp_pixel/255;
@@ -114,7 +116,7 @@ LabelArray ReadLabels(const char* filename)
 
 	int32_t magic_number = 0;      //A 32-bit interger
 	int32_t number_of_labels = 0;  //60000 for training. 5000 for testing
-	int8_t label_long = 10;
+	int16_t label_long = 10;
 
 	fread((char*)&magic_number, sizeof(magic_number), 1, file_point); 
 	magic_number = ReverseInt32(magic_number);  
@@ -122,76 +124,108 @@ LabelArray ReadLabels(const char* filename)
 	fread((char*)&number_of_labels,sizeof(number_of_labels),1,file_point);  
 	number_of_labels = ReverseInt32(number_of_labels);
 
-	//LabelArray labarr=(LabelArray)malloc(sizeof(MnistLabelArray));
-	LabelArray labarr=(LabelArray)malloc(sizeof(LabelArray));
-	labarr->number_of_labels = number_of_labels;
-	labarr->label_point = (MnistLabel*)malloc(number_of_labels*sizeof(MnistLabel));
+	//LabelArray labels_array=(LabelArray)malloc(sizeof(MnistLabelArray));
+	LabelArray labels_array=(LabelArray)malloc(sizeof(LabelArray));
+	labels_array->number_of_labels = number_of_labels;
+	labels_array->label_point = (MnistLabel*)malloc(number_of_labels*sizeof(MnistLabel));
 
 	for(int32_t i = 0; i < number_of_labels; ++i)  
 	{  
-		labarr->label_point[i].label_length = 10;
-		labarr->label_point[i].label_data = (int8_t *)calloc(label_long,sizeof(int8_t));
+		labels_array->label_point[i].label_length = 10;
+		labels_array->label_point[i].label_data = (int8_t *)calloc(label_long, sizeof(int8_t));
 		
 		unsigned char temp = 0;  
 		fread((char*) &temp, sizeof(temp), 1, file_point); 
-		labarr->label_point[i].label_data[(int8_t)temp] = 1;   
+		
+		//printf("%d\n",labels_array->label_point[i].label_data[(uint8_t)temp]);
+		labels_array->label_point[i].label_data[(uint8_t)temp] = 1;
+	
 	}
 
 	fclose(file_point);
-	return labarr;	
+	return labels_array;	
 }
 
-char* IntToChar(int i)
+char* IntToChar(int32_t i)
 {
-	int itemp=i;
-	int w=0;
-	while(itemp>=10){
-		itemp=itemp/10;
-		w++;
+	int32_t i_temp = i;
+	int32_t w_max  = 0;
+
+	while(i_temp>=10)
+	{
+		i_temp      = i_temp/10;
+		w_max++;
 	}
-	char* ptr=(char*)malloc((w+2)*sizeof(char));
-	ptr[w+1]='\0';
-	int r;
-	while(i>=10){
-		r=i%10;
-		i=i/10;		
-		ptr[w]=(char)(r+48);
-		w--;
+
+	char* ptr=(char*)malloc((w_max+2) * sizeof(char));
+
+	ptr[w_max+1] = '\0';
+	int value;
+
+	while(i>=10)
+	{
+		value = i%10;
+		i     = i/10;		
+		ptr[w_max] = (char)(value+48);
+		w_max--;
 	}
-	ptr[w]=(char)(i+48);
+
+	ptr[w_max] = (char)(i+48);
+
 	return ptr;
 }
 
 char * CombineStrings(char *a, char *b) 
 {
 	char *ptr;
-	int lena=strlen(a),lenb=strlen(b);
-	int i,l=0;
+	int32_t lena=strlen(a);
+	int32_t lenb=strlen(b);
+	
 	ptr = (char *)malloc((lena+lenb+1) * sizeof(char));
-	for(i=0;i<lena;i++)
-		ptr[l++]=a[i];
-	for(i=0;i<lenb;i++)
+  
+	int32_t l=0;
+	for(int32_t i=0; i<lena; i++)
+		ptr[l++] = a[i];
+
+	for(int32_t i=0; i<lenb; i++)
 		ptr[l++]=b[i];
+
 	ptr[l]='\0';
 	return(ptr);
 }
 
-void SaveImage(ImageArray image_array,char* filedir)
+void SaveImage(ImageArray image_array, char* filedir)
 {
-	int img_number=image_array->number_of_images;
+	int img_number = image_array->number_of_images;
 
-	int i,r;
-	for(i=0;i<img_number;i++){
-		const char* filename=CombineStrings(filedir,CombineStrings(IntToChar(i),".gray"));
-		FILE  *fp=NULL;
-		fp=fopen(filename,"wb");
-		if(fp==NULL)
-			printf("write file failed\n");
-		assert(fp);
-
-		for(r=0;r<image_array->image_point[i].number_of_rows;r++)
-			fwrite(image_array->image_point[i].image_data[r],sizeof(float),image_array->image_point[i].number_of_columns,fp);
+	for(int32_t i=0; i<img_number; i++)
+	{
+		const char* filename = CombineStrings(filedir, CombineStrings(IntToChar(i), ".gray"));
 		
-		fclose(fp);
+		FILE  *file_point    = NULL;
+		file_point           = fopen(filename,"wb");
+
+		if(file_point == NULL)
+		{
+			printf("write file failed\n");
+		  assert(file_point);
+		}
+
+		for(int32_t r=0; r<image_array->image_point[i].number_of_rows; r++)
+		{
+			
+			for(int32_t m=0; m<image_array->image_point[i].number_of_columns; m++)
+			{
+				uint8_t * temp;
+				* temp = image_array->image_point[i].image_data[r][m];
+				fwrite(&temp, sizeof(uint8_t), 1, file_point);
+
+				//printf("%0x",*temp);
+			}			
+			//printf("\n");
+			//fwrite((uint8_t)'\n',sizeof(uint8_t),1,file_point);
+		}
+		
+		fclose(file_point);
 	}	
 }
